@@ -1,4 +1,4 @@
-import { adminClient, corsHeaders, esimAccessRequest, json, loadSecrets, requiredSecret, resolveBasePackage, resolveTopUpPackage, saveProfilesForOrder, sendDeliveryEmail, type OrderRow, type PlanRow } from "../_shared/roamavo.ts";
+import { adminClient, corsHeaders, esimAccessRequest, json, loadSecrets, requiredSecret, resolveBasePackage, resolveTopUpPackage, saveProfilesForOrder, sendDeliveryEmail, type OrderRow, type PlanRow } from "../_shared/roamavo.ts?v=20260628-rpc-secrets";
 
 function hex(buffer: ArrayBuffer) {
   return [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -122,4 +122,3 @@ Deno.serve(async (req) => {
   await admin.from("payment_events").update({ processed_at: new Date().toISOString() }).eq("event_id", eventId);
   return json({ received: true });
 });
-

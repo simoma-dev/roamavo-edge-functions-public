@@ -1,4 +1,4 @@
-import { adminClient, corsHeaders, json, loadSecrets, requiredSecret, saveProfilesForOrder, syncOneEsim } from "../_shared/roamavo.ts";
+import { adminClient, corsHeaders, json, loadSecrets, requiredSecret, saveProfilesForOrder, syncOneEsim } from "../_shared/roamavo.ts?v=20260628-rpc-secrets";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -48,4 +48,3 @@ Deno.serve(async (req) => {
     return json({ error: error instanceof Error ? error.message : "Webhook failed" }, 500);
   }
 });
-
