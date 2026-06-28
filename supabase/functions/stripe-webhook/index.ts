@@ -99,6 +99,7 @@ Deno.serve(async (req) => {
     payload: event,
   });
   if (eventError?.code === "23505") return json({ received: true, duplicate: true });
+  if (eventError) throw new Error(eventError.message);
 
   if (eventType === "checkout.session.completed" && orderId) {
     const { data: order } = await admin

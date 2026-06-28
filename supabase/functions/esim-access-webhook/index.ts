@@ -25,6 +25,7 @@ Deno.serve(async (req) => {
       payload,
     });
     if (insertError?.code === "23505") return json({ received: true, duplicate: true });
+    if (insertError) throw new Error(insertError.message);
 
     if (notifyType === "CHECK_HEALTH") return json({ received: true });
 
