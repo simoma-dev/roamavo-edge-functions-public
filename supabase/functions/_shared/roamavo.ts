@@ -248,6 +248,15 @@ export function parseActivationCode(ac?: string) {
   };
 }
 
+function escapeHtml(value?: string | null) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 export function normalizeProviderStatus(esimStatus?: string, smdpStatus?: string) {
   const esim = String(esimStatus ?? "").toUpperCase();
   const smdp = String(smdpStatus ?? "").toUpperCase();
@@ -274,26 +283,39 @@ export async function sendDeliveryEmail(admin: AdminClient, secrets: SecretBag, 
   const profileHtml = profiles.map((profile, index) => {
     const activation = parseActivationCode(profile.ac);
     return `
-      <div style="border:1px solid #d9e4e1;border-radius:14px;padding:16px;margin:16px 0;">
-        <h2 style="margin:0 0 10px;font-size:18px;">${profiles.length > 1 ? `eSIM ${index + 1}` : "Installation details"}</h2>
-        ${profile.qrCodeUrl ? `<p><img src="${profile.qrCodeUrl}" alt="eSIM QR code" width="220" style="max-width:100%;border:1px solid #edf2f1;border-radius:12px;padding:10px;" /></p>` : ""}
-        <p><strong>ICCID:</strong> ${profile.iccid ?? "Pending"}</p>
-        <p><strong>Activation code:</strong><br /><span style="word-break:break-all;">${profile.ac ?? "Pending"}</span></p>
-        ${activation.smdpAddress ? `<p><strong>SM-DP+ address:</strong> ${activation.smdpAddress}</p>` : ""}
-        ${activation.matchingId ? `<p><strong>Matching ID:</strong> <span style="word-break:break-all;">${activation.matchingId}</span></p>` : ""}
-        ${profile.apn ? `<p><strong>APN:</strong> ${profile.apn}</p>` : ""}
-        ${profile.pin ? `<p><strong>PIN:</strong> ${profile.pin}</p>` : ""}
-        ${profile.puk ? `<p><strong>PUK:</strong> ${profile.puk}</p>` : ""}
+      <div style="border:1px solid #d9e4e1;border-radius:16px;padding:18px;margin:18px 0;background:#ffffff;">
+        <h2 style="margin:0 0 12px;font-size:18px;line-height:1.3;color:#093332;">${profiles.length > 1 ? `eSIM ${index + 1}` : "Installation details"}</h2>
+        ${profile.qrCodeUrl ? `<p style="margin:0 0 16px;"><img src="${escapeHtml(profile.qrCodeUrl)}" alt="eSIM QR code" width="220" style="max-width:100%;border:1px solid #d9e4e1;border-radius:14px;padding:12px;background:#f7faf9;" /></p>` : ""}
+        <p style="margin:10px 0;"><strong>ICCID:</strong> ${escapeHtml(profile.iccid || "Pending")}</p>
+        <p style="margin:10px 0;"><strong>Activation code:</strong><br /><span style="word-break:break-all;">${escapeHtml(profile.ac || "Pending")}</span></p>
+        ${activation.smdpAddress ? `<p style="margin:10px 0;"><strong>SM-DP+ address:</strong> ${escapeHtml(activation.smdpAddress)}</p>` : ""}
+        ${activation.matchingId ? `<p style="margin:10px 0;"><strong>Matching ID:</strong> <span style="word-break:break-all;">${escapeHtml(activation.matchingId)}</span></p>` : ""}
+        ${profile.apn ? `<p style="margin:10px 0;"><strong>APN:</strong> ${escapeHtml(profile.apn)}</p>` : ""}
+        ${profile.pin ? `<p style="margin:10px 0;"><strong>PIN:</strong> ${escapeHtml(profile.pin)}</p>` : ""}
+        ${profile.puk ? `<p style="margin:10px 0;"><strong>PUK:</strong> ${escapeHtml(profile.puk)}</p>` : ""}
       </div>`;
   }).join("");
 
   const html = `
-    <div style="font-family:Arial,sans-serif;color:#0b1f1f;line-height:1.55;">
-      <h1 style="margin:0 0 12px;">${title}</h1>
-      <p>${plan?.countries.name ?? "Your destination"} ${plan?.data_label ?? ""} ${plan?.validity_label ?? ""}</p>
-      ${profileHtml || "<p>Your top-up has been added to your active eSIM.</p>"}
-      <p>You can also view your eSIM in your Roamavo dashboard: <a href="${siteUrl}/dashboard">${siteUrl}/dashboard</a></p>
-      <p style="font-size:13px;color:#5d6b6b;">Need help? Reply to this email or contact support@roamavo.com.</p>
+    <div style="margin:0;padding:0;background:#f4f7f6;">
+      <div style="max-width:640px;margin:0 auto;padding:28px 16px;font-family:Arial,Helvetica,sans-serif;color:#0b1f1f;line-height:1.55;">
+        <div style="border-radius:20px;overflow:hidden;background:#ffffff;border:1px solid #d9e4e1;">
+          <div style="background:#075E5F;padding:22px 24px;color:#ffffff;">
+            <div style="font-size:24px;font-weight:800;letter-spacing:0.2px;">Roamavo</div>
+            <div style="margin-top:6px;font-size:13px;font-weight:700;color:#d8f2ee;">Travel data, ready when you land</div>
+          </div>
+          <div style="padding:24px;">
+            <h1 style="margin:0 0 12px;font-size:26px;line-height:1.2;color:#093332;">${escapeHtml(title)}</h1>
+            <p style="margin:0 0 16px;color:#405453;">${escapeHtml(plan?.countries.name ?? "Your destination")} ${escapeHtml(plan?.data_label ?? "")} ${escapeHtml(plan?.validity_label ?? "")}</p>
+            ${profileHtml || `<div style="border:1px solid #d9e4e1;border-radius:16px;padding:18px;margin:18px 0;background:#f7faf9;">Your top-up has been added to your active eSIM.</div>`}
+            <p style="margin:20px 0 0;">You can also view your eSIM in your Roamavo dashboard:</p>
+            <p style="margin:10px 0 0;"><a href="${escapeHtml(siteUrl)}/dashboard" style="display:inline-block;background:#075E5F;color:#ffffff;text-decoration:none;border-radius:999px;padding:12px 18px;font-weight:700;">Open dashboard</a></p>
+          </div>
+          <div style="border-top:1px solid #d9e4e1;padding:16px 24px;font-size:13px;color:#5d6b6b;background:#f7faf9;">
+            Need help? Reply to this email or contact support@roamavo.com.
+          </div>
+        </div>
+      </div>
     </div>`;
 
   const response = await fetch("https://api.resend.com/emails", {

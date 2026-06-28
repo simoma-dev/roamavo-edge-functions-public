@@ -11,9 +11,6 @@ Deno.serve(async (req) => {
       "STRIPE_SECRET_KEY",
       "ESIM_ACCESS_ACCESS_CODE",
       "NEXT_PUBLIC_SITE_URL",
-      "STRIPE_BRANDING_LOGO_FILE",
-      "STRIPE_BRANDING_PRIMARY_COLOR",
-      "STRIPE_BRANDING_BACKGROUND_COLOR",
     ]);
     const body = await req.json() as { planId?: string; quantity?: number; mode?: "new" | "topup" };
     const planId = String(body.planId ?? "");
@@ -81,8 +78,8 @@ Deno.serve(async (req) => {
     const siteUrl = requiredSecret(secrets, "NEXT_PUBLIC_SITE_URL").replace(/\/$/, "");
     const stripeParams: Record<string, string | number | boolean | null | undefined> = {
       mode: "payment",
-      success_url: `${siteUrl}/checkout/success?country=${encodeURIComponent(plan.countries.slug)}&mode=${mode}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/checkout?country=${encodeURIComponent(plan.countries.slug)}&plan=${encodeURIComponent(plan.id)}&quantity=${quantity}&mode=${mode}`,
+      ui_mode: "elements",
+      return_url: `${siteUrl}/checkout/success?country=${encodeURIComponent(plan.countries.slug)}&mode=${mode}&session_id={CHECKOUT_SESSION_ID}`,
       customer_email: user.email ?? "",
       client_reference_id: order.id,
       "payment_method_types[0]": "card",
@@ -95,21 +92,12 @@ Deno.serve(async (req) => {
       "metadata[user_id]": user.id,
       "metadata[plan_id]": plan.id,
       "metadata[mode]": mode,
-      "branding_settings[display_name]": "Roamavo",
-      "branding_settings[background_color]": secrets.STRIPE_BRANDING_BACKGROUND_COLOR || "#F7FAF9",
-      "branding_settings[button_color]": secrets.STRIPE_BRANDING_PRIMARY_COLOR || "#075E5F",
-      "branding_settings[border_style]": "rounded",
-      "branding_settings[font_family]": "inter",
     };
-    if (secrets.STRIPE_BRANDING_LOGO_FILE) {
-      stripeParams["branding_settings[logo][type]"] = "file";
-      stripeParams["branding_settings[logo][file]"] = secrets.STRIPE_BRANDING_LOGO_FILE;
-    }
 
     const session = await stripeRequest(requiredSecret(secrets, "STRIPE_SECRET_KEY"), "checkout/sessions", stripeParams);
 
     await admin.from("orders").update({ stripe_checkout_session_id: session.id, updated_at: new Date().toISOString() }).eq("id", order.id);
-    return json({ url: session.url });
+    return json({ clientSecret: session.client_secret, sessionId: session.id });
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : "Checkout could not be started" }, 500);
   }
