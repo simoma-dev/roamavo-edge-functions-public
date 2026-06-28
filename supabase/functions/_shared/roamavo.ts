@@ -117,10 +117,7 @@ export async function loadSecrets(admin: AdminClient, keys: string[]) {
   const missing = keys.filter((key) => !bag[key]);
   if (missing.length) {
     const { data } = await admin
-      .schema("private")
-      .from("app_secrets")
-      .select("key,value")
-      .in("key", missing)
+      .rpc("roamavo_get_app_secrets", { p_keys: missing })
       .returns<Array<{ key: string; value: string }>>();
 
     for (const row of data ?? []) {
@@ -459,4 +456,3 @@ export async function syncOneEsim(admin: AdminClient, secrets: SecretBag, custom
   });
   return update;
 }
-
